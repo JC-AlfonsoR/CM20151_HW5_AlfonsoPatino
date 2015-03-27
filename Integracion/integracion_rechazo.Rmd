@@ -1,0 +1,86 @@
+Para realizar la integración se usarán los paquetes *stats* y *pracma*
+
+```{r}
+library('stats')
+library('pracma')
+```
+
+
+Se define una funcion para calcular la integral usando el método del rechazo. La funcion toma como argumentos
+la funcion a integrar y el intervalo de integración como x_min y x_max. La funcion que se pone como argumento en la función integral_rechazo debe recibir como argumento un arreglo x y calcular el valor de y para cada uno de los elementos del arreglo en x. Este método resulta efectivo para calcular integrales de funciones que sean
+positivas en todo el intervalo de integración.
+
+
+
+```{r}
+integral_rechazo <- function(func, x_min, x_max)
+  {
+    #por ahora se define la funcion integral_rechazo para integrar funciones positivas en todo el intervalo
+  
+    #se define un vector x con mil puntos en el intervalo de  integracion
+    x <- linspace(x_min, x_max,  10000)   
+    
+    y <- func(x)
+    
+    #Se encuentra el maximo de y para definir el cuadro en el que se van a generar los puntos
+    y_max <- max(y)
+    y_min <- min(y)
+    random_x <- runif(10000, x_min, x_max)
+    random_y <- runif(10000, y_min, y_max)
+    
+    print("Llenado de intervalo de integracioón con puntos aleatorios")
+    
+    #Gráfica del intervalo de integración
+    plot(random_x, random_y, main="Intervalo de integración", xlab="x", ylab="y", pch=1)
+    
+    print("Definicion de funcion a integrar")
+    
+    #Gráfica de función a integrar
+    plot(x, y, main="Función a integrar", xlab="x", ylab="y", pch=1)
+    
+    #seleccion de puntos que estan abajo de la curva    
+    diferencia <- func(random_x) - random_y
+    abajo <- which(diferencia>0.0)
+    
+    #Gráfica de puntos que están bajo la curva
+    print("La integral de una función puede pensarse como el área bajo la curva. Es por esto que se quiere calcular cuáles puntos del intervalo definido están bajo la curva.")
+    
+    plot(random_x[abajo], random_y[abajo], main = "Puntos bajo la curva", xlab="x", ylab="y", pch=1)
+    
+    #Cálculo de relacion de números de puntos total y número de puntos bajo la curva
+    print("Finalmente, para calcular el área bajo la curva se hace primero el cálculo del aŕea total del intervalo y se multiplica por la relación del número de puntos bajo la curva y el número total de puntos.")
+    
+    intervalo_integral <- (y_max-y_min) * (x_max - x_min)
+    valor_integral = intervalo_integral * (size(abajo)/(1.0*size(random_y)))  
+    
+    
+    return (valor_integral)
+
+  }
+```
+
+Para probar la función creada previamente se va a calcular la integral de la función \n
+$h(x) = {(cos(50x)+sin(20x))}^2$ \n
+para compararla con el cálculo de la integral usando la función *integrate* incluida en el paquete *stats*.
+
+
+```{r}
+#se define la función que se quiere integrar
+h <- function(x)
+  {
+   return((cos(50*x)+sin(20*x))^2)   
+  }
+
+#se usa la funcion previamente definida para calcular la integral
+valor_integral <- integral_rechazo(h, 0,1)
+
+print(valor_integral)
+
+#calculo de la integral usando la funcion integrate
+
+integral_integrate <- integrate(h, 0,1)
+
+print(integral_integrate)  
+```
+
+
