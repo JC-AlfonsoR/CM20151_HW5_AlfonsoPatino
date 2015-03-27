@@ -10,23 +10,64 @@ Se define una funcion para calcular la integral usando el método del rechazo. L
 la funcion a integrar y el intervalo de integración como x_min y x_max. La funcion que se pone como argumento en la función integral_rechazo debe recibir como argumento un arreglo x y calcular el valor de y para cada uno de los elementos del arreglo en x. Este método resulta efectivo para calcular integrales de funciones que sean
 positivas en todo el intervalo de integración.
 
+En caso de que se quiera integrar en un intervalo infinito, se debe especificar cuál es el límite de integración que tiende a infinito poniendo el límite de integración como "inf". Por ejemplo, si el límite de integración superior es infinito, los argumentos de la función deben ser integral_rechazo(func, x_min, "inf"). Para lograr integrar una función en un intervalo infinito, la función debe ser decreciente cuando tiendea infinito,
+y debe disminuir más rápido que la función $$f(x) = \frac{1}{x}$$
+
 
 
 ```{r}
 integral_rechazo <- function(func, x_min, x_max)
   {
-    #por ahora se define la funcion integral_rechazo para integrar funciones positivas en todo el intervalo
+    #Número de puntos que se generarán aleatoriamente en cada eje del intervalo. Entre mayor sea este
+    #número, mayor exactitud tendrá el valor calculado de la integral.
+    n_points <- 10000
+   
+        
+    #Comprobación si el intervalo de integración es infinito.
+    #En caso de que el intervalo sea infinito, se buscara un valor de x para el que y es lo suficientemente
+    #pequeño para aproximar el intervalo de integración hasta ese punto. Se considerará un valor de y
+    #suficientemente pequeño si es menor a 1/n_points, es decir a 1 sobre el número de puntos aleatorios
+    #generados en cada eje.
+    if (x_max == "inf")
+      {
+        #Como el límite superior es el que tiende a infinito, se usa un intervalo desde cero hasta un x 
+        #positivo lo suficientemente grande. Se calculan los valores de y en ese intervalo de prueba
+      
+        x_prueba <- linspace(0, 100, 1000)
+        y <- func(x_prueba)
+        
+        #creación de vector con índices de y menores a 
+         y_pequenos <- which(y<(1/n_points))
+         #selección de valor de x hasta el cual se va a ser la aproximación del intervalo
+         #se usa el primer valor de la lista
+         x_max <- x_prueba[y_pequenos[1]]
+      }
   
+    
+    if (x_min == "inf")
+      {
+        #Como el límite inferior es el que tiende a infinito, se usa un intervalo desde cero hasta un x 
+        #pequeño lo suficientemente grande. Se calculan los valores de y en ese intervalo de prueba
+      
+        x_prueba <- linspace(-100, 0, 1000)
+        y <- func(x_prueba)
+        #creación de vector con índices de y menores a 
+        y_pequenos <- which(y<(1/n_points))
+        #selección de valor de x hasta el cual se va a ser la aproximación del intervalo
+        #se usa el primer valor de la lista
+        x_min <- x_prueba[y_pequenos[1]]
+         
+      }
     #se define un vector x con mil puntos en el intervalo de  integracion
     x <- linspace(x_min, x_max,  10000)   
+     y <- func(x)
     
-    y <- func(x)
     
     #Se encuentra el maximo de y para definir el cuadro en el que se van a generar los puntos
     y_max <- max(y)
     y_min <- min(y)
-    random_x <- runif(10000, x_min, x_max)
-    random_y <- runif(10000, y_min, y_max)
+    random_x <- runif(n_points, x_min, x_max)
+    random_y <- runif(n_points, y_min, y_max)
     
     print("Llenado de intervalo de integracioón con puntos aleatorios")
     
@@ -59,8 +100,10 @@ integral_rechazo <- function(func, x_min, x_max)
   }
 ```
 
-Para probar la función creada previamente se va a calcular la integral de la función \n
-$h(x) = {(cos(50x)+sin(20x))}^2$ \n
+Para probar la función creada previamente se va a calcular la integral
+
+$$h(x) = \int\limits_0^1 {(cos(50x)+sin(20x))}^2$$
+
 para compararla con el cálculo de la integral usando la función *integrate* incluida en el paquete *stats*.
 
 
@@ -72,7 +115,7 @@ h <- function(x)
   }
 
 #se usa la funcion previamente definida para calcular la integral
-valor_integral <- integral_rechazo(h, 0,1)
+valor_integral <- integral_rechazo(h,0,1)
 
 print(valor_integral)
 
@@ -81,6 +124,35 @@ print(valor_integral)
 integral_integrate <- integrate(h, 0,1)
 
 print(integral_integrate)  
+```
+
+Cálculo de la integral 
+
+$$p(y) = \int\limits_2^\infty \frac{1}{\pi(1+{y}^2)}$$
+
+con la función *integral_rechazo* y con la función *integrate*.
+
+
+
+```{r}
+#Creación de la función p
+p <- function(x)
+  {
+    return (1/(pi*(1+x^2)))
+  }
+
+#uso de la función integral_rechazo con 
+valor_integral <- integral_rechazo(p,2,"inf")
+
+print(valor_integral)
+
+#calculo de la integral usando la funcion integrate
+
+integral_integrate <- integrate(p, 2 , Inf)
+
+print(integral_integrate)  
+
+  
 ```
 
 
