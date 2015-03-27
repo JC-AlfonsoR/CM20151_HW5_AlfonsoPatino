@@ -10,8 +10,7 @@ Se define una funcion para calcular la integral usando el método del rechazo. L
 la funcion a integrar y el intervalo de integración como x_min y x_max. La funcion que se pone como argumento en la función integral_rechazo debe recibir como argumento un arreglo x y calcular el valor de y para cada uno de los elementos del arreglo en x. Este método resulta efectivo para calcular integrales de funciones que sean
 positivas en todo el intervalo de integración.
 
-En caso de que se quiera integrar en un intervalo infinito, se debe especificar cuál es el límite de integración que tiende a infinito poniendo el límite de integración como "inf". Por ejemplo, si el límite de integración superior es infinito, los argumentos de la función deben ser integral_rechazo(func, x_min, "inf"). Para lograr integrar una función en un intervalo infinito, la función debe ser decreciente cuando tiendea infinito,
-y debe disminuir más rápido que la función $$f(x) = \frac{1}{x}$$
+En caso de que se quiera integrar en un intervalo infinito, se debe especificar cuál es el límite de integración que tiende a infinito poniendo el límite de integración como "inf". Por ejemplo, si el límite de integración superior es infinito, los argumentos de la función deben ser integral_rechazo(func, x_min, "inf"). Para lograr integrar una función en un intervalo infinito, la función debe ser decreciente cuando tiende a infinito y la integral debe converger.
 
 
 
@@ -19,15 +18,14 @@ y debe disminuir más rápido que la función $$f(x) = \frac{1}{x}$$
 integral_rechazo <- function(func, x_min, x_max)
   {
     #Número de puntos que se generarán aleatoriamente en cada eje del intervalo. Entre mayor sea este
-    #número, mayor exactitud tendrá el valor calculado de la integral.
+    #número, mayor exactitud tendrá el valor de la integral pero se demorará más en calcularla.
     n_points <- 10000
    
         
     #Comprobación si el intervalo de integración es infinito.
     #En caso de que el intervalo sea infinito, se buscara un valor de x para el que y es lo suficientemente
     #pequeño para aproximar el intervalo de integración hasta ese punto. Se considerará un valor de y
-    #suficientemente pequeño si es menor a 1/n_points, es decir a 1 sobre el número de puntos aleatorios
-    #generados en cada eje.
+    #suficientemente pequeño si es menor a 1/10000.
     if (x_max == "inf")
       {
         #Como el límite superior es el que tiende a infinito, se usa un intervalo desde cero hasta un x 
@@ -37,7 +35,7 @@ integral_rechazo <- function(func, x_min, x_max)
         y <- func(x_prueba)
         
         #creación de vector con índices de y menores a 
-         y_pequenos <- which(y<(1/n_points))
+         y_pequenos <- which(y<(1/10000))
          #selección de valor de x hasta el cual se va a ser la aproximación del intervalo
          #se usa el primer valor de la lista
          x_max <- x_prueba[y_pequenos[1]]
@@ -52,7 +50,7 @@ integral_rechazo <- function(func, x_min, x_max)
         x_prueba <- linspace(-100, 0, 1000)
         y <- func(x_prueba)
         #creación de vector con índices de y menores a 
-        y_pequenos <- which(y<(1/n_points))
+        y_pequenos <- which(y<(1/10000))
         #selección de valor de x hasta el cual se va a ser la aproximación del intervalo
         #se usa el primer valor de la lista
         x_min <- x_prueba[y_pequenos[1]]
@@ -116,14 +114,17 @@ h <- function(x)
 
 #se usa la funcion previamente definida para calcular la integral
 valor_integral <- integral_rechazo(h,0,1)
-
-print(valor_integral)
-
 #calculo de la integral usando la funcion integrate
 
 integral_integrate <- integrate(h, 0,1)
+```
 
-print(integral_integrate)  
+```{r echo =FALSE}
+#Se imprimen lo valores en el documento html
+print(paste0("El valor de la integral es ", valor_integral[2]))
+print("El valor de la integral usando integrate")
+print(integral_integrate)
+
 ```
 
 Cálculo de la integral 
@@ -144,15 +145,15 @@ p <- function(x)
 #uso de la función integral_rechazo con 
 valor_integral <- integral_rechazo(p,2,"inf")
 
-print(valor_integral)
-
 #calculo de la integral usando la funcion integrate
-
 integral_integrate <- integrate(p, 2 , Inf)
-
-print(integral_integrate)  
-
-  
 ```
 
+```{r echo =FALSE}
+#Se imprimen lo valores en el documento html
+print(paste0("El valor de la integral es ", valor_integral[2]))
+print("El valor de la integral usando integrate")
+print(integral_integrate)
+
+```
 
