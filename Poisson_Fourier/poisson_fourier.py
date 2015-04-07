@@ -5,6 +5,8 @@ solo el primer punto en x. Si quiere ejecute el codigo en la consola y vera. Agr
 vecinos pero aun asi no es suficiente.
 '''
 import numpy as np
+from scipy.ndimage.filters import maximum_filter, minimum_filter
+from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 
 coordenadas = np.loadtxt('Serena-Venus.txt')
 m = 1.0
@@ -12,7 +14,6 @@ x_puntos = coordenadas[:,1]
 y_puntos = coordenadas[:,2]
 z_puntos = coordenadas[:,3]
 
-x_puntos, y_puntos, z_puntos = (list(t) for t in zip(*sorted(zip(x_puntos, y_puntos, z_puntos)))) #Se ordenan los puntos de acuerdo a la coordenada x
 
 l_x = max(x_puntos) - min(x_puntos)
 l_y = max(y_puntos) - min(y_puntos)
@@ -177,16 +178,52 @@ F_z = fz.ravel()
 
 # Iteracion sobre cada elemento de la malla
 Gravedad = np.zeros(np.shape(X_g))
-for i in range(n_g):    
-    # Iteracion en las particulas que afectan al cuadrado i del grid
-            
-    Gravedad[i] = np.sqrt((F_x[i]**2)+(F_y[i]**2)+(F_z[i]**2))
-    
+#for i in range(n_g): 
+    #Calculo de gravedad para cada elemento en la malla
+#    Gravedad[i] = np.sqrt((F_x[i]**2)+(F_y[i]**2)+(F_z[i]**2))
+ 
+Gravedad = np.sqrt((F_x**2)+(F_y**2)+(F_z**2))  
+ 
 #Matriz de valores de gravedad
 Gravedad_m = np.reshape(Gravedad, newshape=np.shape(g[0]))
 
-print Gravedad_m
+#print Gravedad
+#print Gravedad_m
 
+def busqueda_maximos(array):
+    
+    vecindario = generate_binary_structure(len(array.shape),2)
+
+    local_max = (maximum_filter(array, footprint = vecindario)==array)
+
+    background = (array == 0)
+
+    eroded_background = binary_erosion(background, structure = vecindario, border_value = 1)
+
+    maximos_detectados = local_max - eroded_background
+
+    return np.where(maximos_detectados)
+
+def busqueda_minimos(array):
+     
+    vecindario = generate_binary_structure(len(array.shape),2)
+
+    local_min = (minimum_filter(array, footprint = vecindario)==array)
+
+    background = (array == 0)
+
+    eroded_background = binary_erosion(background, structure = vecindario, border_value = 1)
+
+    minimos_detectados = local_min - eroded_background
+
+    return np.where(minimos_detectados)
+
+
+ind_maximos = busqueda_maximos(Gravedad_m)
+
+ind_minimos = busqueda_minimos(Gravedad_m)
+
+print Gravedad_m[ind_maximos]
 
 
  
