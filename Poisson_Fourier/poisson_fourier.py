@@ -5,7 +5,6 @@ solo el primer punto en x. Si quiere ejecute el codigo en la consola y vera. Agr
 vecinos pero aun asi no es suficiente.
 '''
 import numpy as np
-from mayavi.mlab import quiver3d
 
 coordenadas = np.loadtxt('Serena-Venus.txt')
 m = 1.0
@@ -172,7 +171,21 @@ fx = np.absolute(fx)
 fy = np.absolute(fy)
 fz = np.absolute(fz)
 
-quiver3d(x_puntos,y_puntos,z_puntos,fx,fy,fz)
+F_x = fx.ravel()
+F_y = fy.ravel()
+F_z = fz.ravel()
+
+# Iteracion sobre cada elemento de la malla
+Gravedad = np.zeros(np.shape(X_g))
+for i in range(n_g):    
+    # Iteracion en las particulas que afectan al cuadrado i del grid
+            
+    Gravedad[i] = np.sqrt((F_x[i]**2)+(F_y[i]**2)+(F_z[i]**2))
+    
+#Matriz de valores de gravedad
+Gravedad_m = np.reshape(Gravedad, newshape=np.shape(g[0]))
+
+print Gravedad_m
 
 
 
