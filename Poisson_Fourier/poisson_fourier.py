@@ -5,7 +5,7 @@ solo el primer punto en x. Si quiere ejecute el codigo en la consola y vera. Agr
 vecinos pero aun asi no es suficiente.
 '''
 import numpy as np
-from enthought.mayavi.mlab import *
+from mayavi.mlab import quiver3d
 
 coordenadas = np.loadtxt('Serena-Venus.txt')
 m = 1.0
@@ -171,6 +171,8 @@ fx,fy, fz = np.asarray(np.gradient(phi))
 fx = np.absolute(fx)
 fy = np.absolute(fy)
 fz = np.absolute(fz)
+
+quiver3d(x_puntos,y_puntos,z_puntos,fx,fy,fz)
 
 
 
