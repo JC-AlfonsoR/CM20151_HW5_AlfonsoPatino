@@ -5,6 +5,7 @@ solo el primer punto en x. Si quiere ejecute el codigo en la consola y vera. Agr
 vecinos pero aun asi no es suficiente.
 '''
 import numpy as np
+from enthought.mayavi.mlab import *
 
 coordenadas = np.loadtxt('Serena-Venus.txt')
 m = 1.0
@@ -21,11 +22,11 @@ l_z = max(z_puntos) - min(z_puntos)
 Puntos = np.zeros((len(x_puntos), 3))
 
 for i in range(len(x_puntos)):
-	linea = np.zeros(3)
-	linea[0] = x_puntos[i]
-	linea[1] = y_puntos[i]
-	linea[2] = z_puntos[i]
-	Puntos[i] = linea
+    linea = np.zeros(3)
+    linea[0] = x_puntos[i]
+    linea[1] = y_puntos[i]
+    linea[2] = z_puntos[i]
+    Puntos[i] = linea
 
 def meshgrid2(*arrs):
     arrs = tuple(reversed(arrs))
@@ -45,11 +46,14 @@ def meshgrid2(*arrs):
             ans.append(arr2)
         return tuple(ans)
 
-dx,dy,dz = l_x/100, l_y/100, l_z/100 #NUEVAS DEFINICIONES DE dx, dy y dz y x, y y z
+dx,dy,dz = l_x/5, l_y/5, l_z/5 #NUEVAS DEFINICIONES DE dx, dy y dz y x, y y z
 x = np.arange(min(x_puntos),max(x_puntos),dx)
 y = np.arange(min(y_puntos),max(y_puntos),dy)
 z = np.arange(min(z_puntos),max(z_puntos),dz)
 g = meshgrid2(x,y,z)
+X_g = g[0].ravel()
+Y_g = g[1].ravel()
+Z_g = g[2].ravel()
 
 def superponen(x_g, x_p, dx):
     """Analiza si el dominio x_p +- dx/2 esta dentro del rango x_g + dx . Devuelve True o False
@@ -110,21 +114,64 @@ def vecinos(x_g, y_g, z_g, dx, dy, dz, Puntos):
         if (superponen(x_g,xp,dx) and superponen(y_g, yp, dy)) and superponen(z_g, zp, dz):
             I.append(i)
             
-        #Adicion para optimizar un poco la busqueda de puntos en una celda
-        if i > 0:
-        	xp_ant, yp_ant, zp_ant = Puntos[i-1,:] #Coordendas de punto anterior
-        	if superponen(x_g,xp,dx) and not(x_g,xp_ant,dx): #Si el punto actual no se incluye en la celda y el anterior si, se interrumpe el loop porque como la coordenada x esta ordenada, los puntos que siguen tampoco estaran en la casilla
-        		break
     return I
+
+def W_peso(x, Dx):
+    """ Funcion W(x) definida en el enunciado de la tarea
+    """
+    if -Dx<x:
+        return(1+x/Dx)
+    elif x<Dx:
+        return(1-x/Dx)
+    else:
+        return(0)
 
 Vecinos = []
 #Econtrar las particulas que aportan masa a cada cuadrado de la grilla
 j = 0
 for xg,yg,zg in np.vstack(map(np.ravel, g)).T:
-	j = j + 1
-	print xg, j
-	Vecinos.append(vecinos(xg, yg, zg, dx, dy, dz, Puntos))
+    j = j + 1
+    print xg, j
+    Vecinos.append(vecinos(xg, yg, zg, dx, dy, dz, Puntos))
 #Vecinos
+Rho = np.zeros(np.shape(X_g))
+n_g = len(X_g) # Numero de elementos en la malla
+N = np.zeros(np.shape(X_g)) 
 
-print "ok"
 
+
+# Iteracion sobre cada elemento de la malla
+for i in range(n_g):
+    s = 0;    
+    # Iteracion en las particulas que afectan al cuadrado i del grid
+    for j in Vecinos[i]:
+        #j es la identidad de cada particula
+        s = s + (W_peso(X_g[i] - Puntos[j,0],dx)*
+                 W_peso(Y_g[i] - Puntos[j,1],dy)*
+                 W_peso(Z_g[i] - Puntos[j,2],dz))
+        
+    Rho[i] = m/(dx*dy*dz)*s
+    #N[i] = len(Vecinos[i])
+R = np.reshape(Rho, newshape=np.shape(g[0]))
+
+#Se realiza la transformada de Fourier para encontrar la densidad en el espacio de Fourier
+rho_fourier = np.fft.fftn(R)
+
+
+#Se haya  el potencial en el espacio de Fourier
+phi_fourier = -rho_fourier
+
+#Se hace la transformada inversa de Fourier para encontrar el potencial real.
+phi = np.fft.ifftn(phi_fourier)
+
+#Esta linea devuelve el valor de lal fuerza de gravedad en las componentes fx, fy y fz
+fx,fy, fz = np.asarray(np.gradient(phi))
+
+#Como la transformada da como resultado valores complejos, se necesita sacar el valor absoluto
+fx = np.absolute(fx)
+fy = np.absolute(fy)
+fz = np.absolute(fz)
+
+
+
+ 
