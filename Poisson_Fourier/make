@@ -1,0 +1,5 @@
+all: Serena-Venus.txt  Contornos.png
+
+Contornos.png : Serena-Venus.txt
+	python poisson_fourier.py
+	

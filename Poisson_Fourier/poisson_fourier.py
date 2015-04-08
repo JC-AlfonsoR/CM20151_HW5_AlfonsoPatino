@@ -4,6 +4,7 @@ Pase parte del codigo a python para probarlo y solo con una una matriz de 100x10
 solo el primer punto en x. Si quiere ejecute el codigo en la consola y vera. Agregue una pequenia optimizacion en la funcion
 vecinos pero aun asi no es suficiente.
 '''
+# python 2.7
 import numpy as np
 from scipy.ndimage.filters import maximum_filter, minimum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
@@ -120,7 +121,7 @@ Vecinos = []
 j = 0
 for xg,yg,zg in np.vstack(map(np.ravel, g)).T:
     j = j + 1
-    print xg, j
+    print(xg, j)
     Vecinos.append(vecinos(xg, yg, zg, dx, dy, dz, Puntos))
 #Vecinos
 Rho = np.zeros(np.shape(X_g))
@@ -220,15 +221,15 @@ ind_maximos = busqueda_maximos(Gravedad_m)
 
 ind_minimos = busqueda_minimos(Gravedad_m)
 
-print "Los picos de la fuerza gravitatoria son", Gravedad_m[ind_maximos]
-print "Los valles de la fuerza gravitatoria son", Gravedad_m[ind_minimos]
+print ("Los picos de la fuerza gravitatoria son", Gravedad_m[ind_maximos])
+print ("Los valles de la fuerza gravitatoria son", Gravedad_m[ind_minimos])
 
 #Calculo de maximos y minimos globales
 maximo = Gravedad_m.max()
 minimo = Gravedad_m.min()
 
-print "El maximo de la fuerza gravitatoria es", maximo
-print "El minimo de la fuerza gravitatoria es", minimo
+print ("El maximo de la fuerza gravitatoria es", maximo)
+print ("El minimo de la fuerza gravitatoria es", minimo)
 
 #Creacion de la grafica
 
@@ -236,10 +237,22 @@ print "El minimo de la fuerza gravitatoria es", minimo
 
 x_plano, y_plano = np.meshgrid(x,y)
 
+
+
+
+
 #Se escogen el valor de z para el plano para el que se quiere hacer la grafica. Z debe estar en el intervalo de divisiones de la grilla
 #Usando este valor se seleccionan los valores de la gravedad en ese plano
 z_plano = 0
 valores_gravedad = Gravedad_m[:][:][z_plano]
+
+#Guardar datos en csv
+x_data = x_plano.ravel()
+np.savetxt('x_data.csv',x_data,delimiter=",")
+y_data = y_plano.ravel()
+np.savetxt('y_data.csv',y_data,delimiter=",")
+g_data = valores_gravedad.ravel()
+np.savetxt('g_data.csv',g_data,delimiter=",")
 
 #Creacion de grafica
 titulo = 'Valores de gravedad para z=', z_plano
@@ -251,7 +264,7 @@ CP1 = plt.contour(x_plano, y_plano, valores_gravedad)
 plt.clabel(CP1, inline=True, fontsize=10)
 plt.colorbar()
 plt.show()
-
+plt.savefig('Contornos.png')
 
 
 
