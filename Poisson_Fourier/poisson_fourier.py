@@ -246,6 +246,9 @@ titulo = 'Valores de gravedad para z=', z_plano
 plt.pcolor(x_plano, y_plano, valores_gravedad, cmap='RdBu')
 plt.title(titulo)
 plt.plot(x_puntos,y_puntos, 'bo',alpha = 0.1)
+CP1 = plt.contour(x_plano, y_plano, valores_gravedad)
+# replace this
+plt.clabel(CP1, inline=True, fontsize=10)
 plt.colorbar()
 plt.show()
 
