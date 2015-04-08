@@ -7,6 +7,9 @@ vecinos pero aun asi no es suficiente.
 import numpy as np
 from scipy.ndimage.filters import maximum_filter, minimum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+
 
 coordenadas = np.loadtxt('Serena-Venus.txt')
 m = 1.0
@@ -28,29 +31,15 @@ for i in range(len(x_puntos)):
     linea[2] = z_puntos[i]
     Puntos[i] = linea
 
-def meshgrid2(*arrs):
-    arrs = tuple(reversed(arrs))
-    lens = map(len, arrs)
-    dim = len(arrs)
-    sz = 1
-    for s in lens:
-        sz *= s
-        ans = []
-        for i, arr in enumerate(arrs):
-            slc = [1]*dim
-            slc[i] = lens[i]
-            arr2 = np.asarray(arr).reshape(slc)
-            for j, sz in enumerate(lens):
-                if j != i:
-                    arr2 = arr2.repeat(sz, axis=j)
-            ans.append(arr2)
-        return tuple(ans)
+#Numero de casilla por eje
+tamano_grid = 10
 
-dx,dy,dz = l_x/5, l_y/5, l_z/5 #NUEVAS DEFINICIONES DE dx, dy y dz y x, y y z
+#Creacion de grid
+dx,dy,dz = l_x/tamano_grid, l_y/tamano_grid, l_z/tamano_grid #NUEVAS DEFINICIONES DE dx, dy y dz y x, y y z
 x = np.arange(min(x_puntos),max(x_puntos),dx)
 y = np.arange(min(y_puntos),max(y_puntos),dy)
 z = np.arange(min(z_puntos),max(z_puntos),dz)
-g = meshgrid2(x,y,z)
+g = np.meshgrid(x,y,z)
 X_g = g[0].ravel()
 Y_g = g[1].ravel()
 Z_g = g[2].ravel()
@@ -167,7 +156,7 @@ phi = np.fft.ifftn(phi_fourier)
 #Esta linea devuelve el valor de lal fuerza de gravedad en las componentes fx, fy y fz
 fx,fy, fz = np.asarray(np.gradient(phi))
 
-#Como la transformada da como resultado valores complejos, se necesita sacar el valor absoluto
+#Como la transformada da como resultado valores complejos, se saca la norma de cada valor en la matriz.
 fx = np.absolute(fx)
 fy = np.absolute(fy)
 fz = np.absolute(fz)
@@ -176,30 +165,38 @@ F_x = fx.ravel()
 F_y = fy.ravel()
 F_z = fz.ravel()
 
-# Iteracion sobre cada elemento de la malla
+# Creacion del array para los valores de la gravedad
 Gravedad = np.zeros(np.shape(X_g))
-#for i in range(n_g): 
-    #Calculo de gravedad para cada elemento en la malla
-#    Gravedad[i] = np.sqrt((F_x[i]**2)+(F_y[i]**2)+(F_z[i]**2))
  
+#Se calculan los valores de la fuerza gravitacional sumando las tres componentes que se calcularon previamente usando la funcion gradiente
 Gravedad = np.sqrt((F_x**2)+(F_y**2)+(F_z**2))  
  
 #Matriz de valores de gravedad
 Gravedad_m = np.reshape(Gravedad, newshape=np.shape(g[0]))
 
-#print Gravedad
-#print Gravedad_m
+'''
+Las funciones busqueda_maximos y busqueda_minimos buscan picos y valles en los valores de la fuerza de gravedad.
+Para esto se busca un valor que, en el caso de un pico, sea mayor a todoo los valores vecinos o en su "vecindario".
+La funcion retorna un arreglo con los indices en los que hay ya sea maximos o minimos.
+'''
+
+
 
 def busqueda_maximos(array):
     
+    #Se define un vecindario que se le exigira a un maximo ser mayor a todos los valores que esten en este vecindario
     vecindario = generate_binary_structure(len(array.shape),2)
 
+    #Para encontrar los maximos locales se usa la funcion maximum_filter del paquete scipy. En local_max, debido a la funcion filtro se incluye tambien un valor de background
     local_max = (maximum_filter(array, footprint = vecindario)==array)
 
+    #El background se establece como el valor minimo que puede tomar la gravedad que en este caso es cero
     background = (array == 0)
 
+    #Se usa la funcion binary_erosion para remover correctamente el background y obtener correctamente los indices de los picos.
     eroded_background = binary_erosion(background, structure = vecindario, border_value = 1)
 
+    #Se resta el background a los valores de local_max para obtener los indices correctos.
     maximos_detectados = local_max - eroded_background
 
     return np.where(maximos_detectados)
@@ -223,7 +220,40 @@ ind_maximos = busqueda_maximos(Gravedad_m)
 
 ind_minimos = busqueda_minimos(Gravedad_m)
 
-print Gravedad_m[ind_maximos]
+print "Los picos de la fuerza gravitatoria son", Gravedad_m[ind_maximos]
+print "Los valles de la fuerza gravitatoria son", Gravedad_m[ind_minimos]
+
+#Calculo de maximos y minimos globales
+maximo = Gravedad_m.max()
+minimo = Gravedad_m.min()
+
+print "El maximo de la fuerza gravitatoria es", maximo
+print "El minimo de la fuerza gravitatoria es", minimo
+
+#Creacion de la grafica
+
+#Valores de x y y en el plano
+
+x_plano, y_plano = np.meshgrid(x,y)
+
+#Se escogen el valor de z para el plano para el que se quiere hacer la grafica. Z debe estar en el intervalo de divisiones de la grilla
+#Usando este valor se seleccionan los valores de la gravedad en ese plano
+z_plano = 0
+valores_gravedad = Gravedad_m[:][:][z_plano]
+
+#Creacion de grafica
+titulo = 'Valores de gravedad para z=', z_plano
+plt.pcolor(x_plano, y_plano, valores_gravedad, cmap='RdBu')
+plt.title(titulo)
+plt.plot(x_puntos,y_puntos, 'bo',alpha = 0.1)
+plt.colorbar()
+plt.show()
+
+
+
+
+
+
 
 
  
